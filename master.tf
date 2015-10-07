@@ -109,6 +109,21 @@ resource "aws_security_group_rule" "chef-server-egress-postgres" {
     security_group_id = "${aws_security_group.chef-server-sg.id}"
 }
 
+resource "aws_security_group" "chef-server-db-sg" {
+    name = "chef-server-db-sg"
+    description = "Chef Server RDS Database Security Group"
+    vpc_id = "${aws_vpc.chef-cluster.id}"
+}
+
+resource "aws_security_group_rule" "chef-server-db-ingress-postgres" {
+    type = "ingress"
+    from_port = 5432
+    to_port = 5432
+    protocol = "tcp"
+    security_group_id = "${aws_security_group.chef-server-db-sg.id}"
+    source_security_group_id = "${aws_security_group.chef-server-sg.id}"
+}
+
 resource "aws_route_table_association" "chef-cluster-public-routing" {
     subnet_id = "${aws_subnet.chef-cluster-public-subnet.id}"
     route_table_id = "${aws_route_table.chef-cluster-outbound.id}"
@@ -126,11 +141,12 @@ resource "aws_db_instance" "chef-server-db" {
     engine = "postgres"
     engine_version = "9.4.1"
     instance_class = "db.t2.small"
-    name = "mydb"
+    name = "chefserver"
     username = "chef"
     password = "chefchefchef"
     db_subnet_group_name = "${aws_db_subnet_group.chef-cluster-db-subnet.name}"
     parameter_group_name = "default.postgres9.4"
+    vpc_security_group_ids = [ "${aws_security_group.chef-server-db-sg.id}" ]
 }
 
 resource "aws_launch_configuration" "chef-cluster-frontend-launchcfg" {
