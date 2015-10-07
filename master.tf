@@ -137,6 +137,7 @@ resource "aws_launch_configuration" "chef-cluster-frontend-launchcfg" {
     image_id = "${lookup(var.amis, var.region)}"
     instance_type = "m3.medium"
     security_groups = [ "${aws_security_group.chef-server-sg.id}" ]
+    key_name = "${lookup(var.keys, var.region)}"
     lifecycle {
       create_before_destroy = true
     }
