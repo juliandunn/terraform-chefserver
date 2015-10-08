@@ -221,7 +221,7 @@ resource "aws_db_instance" "chef-server-db" {
     identifier = "chef-server-db"
     allocated_storage = 10
     engine = "postgres"
-    engine_version = "9.4.1"
+    engine_version = "9.4.4"
     instance_class = "db.t2.small"
     username = "chef"
     password = "chefchefchef"
