@@ -2,6 +2,7 @@ provider "aws" {
     region = "${var.region}"
 }
 
+# VPC and basic networking
 resource "aws_vpc" "chef-cluster" {
     cidr_block = "192.168.8.0/24"
 
@@ -54,7 +55,8 @@ resource "aws_route_table_association" "chef-cluster-public-routing" {
     route_table_id = "${aws_route_table.chef-cluster-outbound.id}"
 }
 
-# ELB
+# ELB and security groups for ELB
+# Note that the ELB security groups are codependent with the server ones
 resource "aws_security_group" "chef-cluster-elb-sg" {
     name = "chef-cluster-elb-sg"
     description = "Chef Cluster ELB Security Group"
@@ -229,10 +231,45 @@ resource "aws_db_instance" "chef-server-db" {
     vpc_security_group_ids = [ "${aws_security_group.chef-server-db-sg.id}" ]
 }
 
-# ELB and security groups for the ELB
+# S3 bucket for cookbooks, IAM user for that, bucket policy
+resource "aws_s3_bucket" "chef-server-cookbooks" {
+    bucket = "chef-server-cookbooks"
+}
+
+resource "aws_iam_user" "chef-server-cookbooks-user" {
+    name = "chef-server-cookbooks-user"
+}
+
+resource "aws_iam_access_key" "chef-server-cookbooks-user-key" {
+    user = "${aws_iam_user.chef-server-cookbooks-user.name}"
+}
+
+# Hmm... S3 bucket doesn't export an ARN
+resource "aws_iam_policy" "chef-server-cookbooks-policy" {
+    name = "chef-server-cookbooks-policy"
+    description = "Chef server cookbooks S3 bucket policy"
+    policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"],
+      "Effect": "Allow",
+      "Resource": "arn:aws:s3:::${aws_s3_bucket.chef-server-cookbooks.id}/*",
+      "Principal": "${aws_iam_user.chef-server-cookbooks-user.arn}"
+    },
+    {
+      "Action": ["s3:ListBucket"],
+      "Effect": "Allow",
+      "Resource": "arn:aws:s3:::${aws_s3_bucket.chef-server-cookbooks.id}",
+      "Principal": "${aws_iam_user.chef-server-cookbooks-user.arn}"
+    }
+  ]
+}
+EOF
+}
 
 # Autoscaling groups and launch configs
-
 resource "aws_launch_configuration" "chef-cluster-frontend-launchcfg" {
     image_id = "${lookup(var.amis, var.region)}"
     instance_type = "${var.instance_size}"
