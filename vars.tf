@@ -4,8 +4,9 @@ variable "region" {
 
 variable "amis" {
     default = {
-        us-east-1 = "ami-12663b7a"
-        us-west-2 = "ami-4dbf9e7d"
+        us-east-1 = "ami-96a818fe"
+        us-west-1 = "ami-6bcfc42e"
+        us-west-2 = "ami-c7d092f7"
     }
 }
 
