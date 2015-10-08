@@ -223,7 +223,6 @@ resource "aws_db_instance" "chef-server-db" {
     engine = "postgres"
     engine_version = "9.4.1"
     instance_class = "db.t2.small"
-    name = "chefserver"
     username = "chef"
     password = "chefchefchef"
     db_subnet_group_name = "${aws_db_subnet_group.chef-cluster-db-subnet.name}"
