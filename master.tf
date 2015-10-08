@@ -244,10 +244,9 @@ resource "aws_iam_access_key" "chef-server-cookbooks-user-key" {
     user = "${aws_iam_user.chef-server-cookbooks-user.name}"
 }
 
-# Hmm... S3 bucket doesn't export an ARN
-resource "aws_iam_policy" "chef-server-cookbooks-policy" {
-    name = "chef-server-cookbooks-policy"
-    description = "Chef server cookbooks S3 bucket policy"
+resource "aws_iam_user_policy" "chef-server-cookbooks-access-policy" {
+    name = "chef-server-cookbooks-access-policy"
+    user = "${aws_iam_user.chef-server-cookbooks-user.name}"
     policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -255,14 +254,12 @@ resource "aws_iam_policy" "chef-server-cookbooks-policy" {
     {
       "Action": ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"],
       "Effect": "Allow",
-      "Resource": "arn:aws:s3:::${aws_s3_bucket.chef-server-cookbooks.id}/*",
-      "Principal": "${aws_iam_user.chef-server-cookbooks-user.arn}"
+      "Resource": "arn:aws:s3:::${aws_s3_bucket.chef-server-cookbooks.id}/*"
     },
     {
       "Action": ["s3:ListBucket"],
       "Effect": "Allow",
-      "Resource": "arn:aws:s3:::${aws_s3_bucket.chef-server-cookbooks.id}",
-      "Principal": "${aws_iam_user.chef-server-cookbooks-user.arn}"
+      "Resource": "arn:aws:s3:::${aws_s3_bucket.chef-server-cookbooks.id}"
     }
   ]
 }
