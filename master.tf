@@ -49,19 +49,103 @@ resource "aws_route_table" "chef-cluster-outbound" {
     }
 }
 
+resource "aws_route_table_association" "chef-cluster-public-routing" {
+    subnet_id = "${aws_subnet.chef-cluster-public-subnet.id}"
+    route_table_id = "${aws_route_table.chef-cluster-outbound.id}"
+}
+
+# ELB
+resource "aws_security_group" "chef-cluster-elb-sg" {
+    name = "chef-cluster-elb-sg"
+    description = "Chef Cluster ELB Security Group"
+    vpc_id = "${aws_vpc.chef-cluster.id}"
+}
+
+resource "aws_security_group_rule" "chef-cluster-elb-ingress-http" {
+    type = "ingress"
+    from_port = 80
+    to_port = 80
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    security_group_id = "${aws_security_group.chef-cluster-elb-sg.id}"
+}
+
+resource "aws_security_group_rule" "chef-cluster-elb-ingress-https" {
+    type = "ingress"
+    from_port = 443
+    to_port = 443 
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    security_group_id = "${aws_security_group.chef-cluster-elb-sg.id}"
+}
+
+resource "aws_security_group_rule" "chef-server-elb-egress-http" {
+    type = "egress"
+    from_port = 80
+    to_port = 80
+    protocol = "tcp"
+    security_group_id = "${aws_security_group.chef-cluster-elb-sg.id}"
+    source_security_group_id = "${aws_security_group.chef-server-sg.id}"
+}
+
+resource "aws_security_group_rule" "chef-server-elb-egress-https" {
+    type = "egress"
+    from_port = 443
+    to_port = 443
+    protocol = "tcp"
+    security_group_id = "${aws_security_group.chef-cluster-elb-sg.id}"
+    source_security_group_id = "${aws_security_group.chef-server-sg.id}"
+}
+
+resource "aws_elb" "chef-cluster-elb" {
+  name = "chef-cluster-elb"
+  security_groups = [ "${aws_security_group.chef-cluster-elb-sg.id}" ]
+  subnets = [ "${aws_subnet.chef-cluster-public-subnet.id}" ]
+  listener {
+    instance_port = 80
+    instance_protocol = "http"
+    lb_port = 80
+    lb_protocol = "http"
+  }
+
+  listener {
+    instance_port = 443
+    instance_protocol = "https"
+    lb_port = 443
+    lb_protocol = "https"
+    ssl_certificate_id = "${var.elb_sslcert}"
+  }
+
+  health_check {
+    healthy_threshold = 2
+    unhealthy_threshold = 2
+    timeout = 3
+    target = "HTTP:80/"
+    interval = 30
+  }
+
+  cross_zone_load_balancing = true
+  idle_timeout = 400
+  connection_draining = true
+  connection_draining_timeout = 400
+
+}
+
+# Security groups and rules for the server instances themselves
 resource "aws_security_group" "chef-server-sg" {
     name = "chef-server-sg"
     description = "Chef Server Security Group"
     vpc_id = "${aws_vpc.chef-cluster.id}"
 }
 
+# HTTP and HTTPS aren't required from anywhere but the ELB
 resource "aws_security_group_rule" "chef-server-ingress-http" {
     type = "ingress"
     from_port = 80
     to_port = 80
     protocol = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
     security_group_id = "${aws_security_group.chef-server-sg.id}"
+    source_security_group_id = "${aws_security_group.chef-cluster-elb-sg.id}"
 }
 
 resource "aws_security_group_rule" "chef-server-ingress-https" {
@@ -69,8 +153,8 @@ resource "aws_security_group_rule" "chef-server-ingress-https" {
     from_port = 443
     to_port = 443 
     protocol = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
     security_group_id = "${aws_security_group.chef-server-sg.id}"
+    source_security_group_id = "${aws_security_group.chef-cluster-elb-sg.id}"
 }
 
 resource "aws_security_group_rule" "chef-server-ingress-ssh" {
@@ -124,11 +208,7 @@ resource "aws_security_group_rule" "chef-server-db-ingress-postgres" {
     source_security_group_id = "${aws_security_group.chef-server-sg.id}"
 }
 
-resource "aws_route_table_association" "chef-cluster-public-routing" {
-    subnet_id = "${aws_subnet.chef-cluster-public-subnet.id}"
-    route_table_id = "${aws_route_table.chef-cluster-outbound.id}"
-}
-
+# Databass
 resource "aws_db_subnet_group" "chef-cluster-db-subnet" {
     name = "chef-cluster-db-subnet"
     description = "Chef Cluster DB subnet"
@@ -148,6 +228,10 @@ resource "aws_db_instance" "chef-server-db" {
     parameter_group_name = "default.postgres9.4"
     vpc_security_group_ids = [ "${aws_security_group.chef-server-db-sg.id}" ]
 }
+
+# ELB and security groups for the ELB
+
+# Autoscaling groups and launch configs
 
 resource "aws_launch_configuration" "chef-cluster-frontend-launchcfg" {
     image_id = "${lookup(var.amis, var.region)}"

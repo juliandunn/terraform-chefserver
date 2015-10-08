@@ -16,3 +16,7 @@ variable "keys" {
         us-west-2 = "us-west2-jdunn"
     }
 }
+
+variable "elb_sslcert" {
+    default = "arn:aws:iam::218542894232:server-certificate/chef.example.com"
+}
