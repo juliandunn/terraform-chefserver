@@ -248,7 +248,8 @@ resource "aws_autoscaling_group" "chef-cluster-asg" {
   max_size = 1
   min_size = 1
   health_check_grace_period = 300
-  health_check_type = "EC2"
+  health_check_type = "ELB"
+  load_balancers = ["${aws_elb.chef-cluster-elb.name}"]
   desired_capacity = 1
   force_delete = true
   launch_configuration = "${aws_launch_configuration.chef-cluster-frontend-launchcfg.name}"
