@@ -235,7 +235,7 @@ resource "aws_db_instance" "chef-server-db" {
 
 resource "aws_launch_configuration" "chef-cluster-frontend-launchcfg" {
     image_id = "${lookup(var.amis, var.region)}"
-    instance_type = "m3.medium"
+    instance_type = "${var.instance_size}"
     security_groups = [ "${aws_security_group.chef-server-sg.id}" ]
     key_name = "${lookup(var.keys, var.region)}"
     lifecycle {

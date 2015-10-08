@@ -20,3 +20,7 @@ variable "keys" {
 variable "elb_sslcert" {
     default = "arn:aws:iam::218542894232:server-certificate/chef.example.com"
 }
+
+variable "instance_size" {
+    default = "t2.medium"
+}
