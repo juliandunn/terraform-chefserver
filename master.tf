@@ -225,6 +225,8 @@ resource "aws_db_instance" "chef-server-db" {
     instance_class = "db.t2.small"
     username = "chef"
     password = "chefchefchef"
+    maintenance_window = "wed:07:20-wed:07:50"
+    backup_window = "04:35-05:05"
     db_subnet_group_name = "${aws_db_subnet_group.chef-cluster-db-subnet.name}"
     parameter_group_name = "default.postgres9.4"
     vpc_security_group_ids = [ "${aws_security_group.chef-server-db-sg.id}" ]
