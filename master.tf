@@ -223,8 +223,8 @@ resource "aws_db_instance" "chef-server-db" {
     engine = "postgres"
     engine_version = "9.4.4"
     instance_class = "db.t2.small"
-    username = "chef"
-    password = "chefchefchef"
+    username = "${var.rds_username}"
+    password = "${var.rds_password}"
     maintenance_window = "wed:07:20-wed:07:50"
     backup_window = "04:35-05:05"
     backup_retention_period = 1
@@ -269,11 +269,24 @@ EOF
 }
 
 # Autoscaling groups and launch configs
+resource "template_file" "install-chef" {
+    filename = "install_chef_server.sh"
+    vars {
+      "aws_access_key" = "${aws_iam_access_key.chef-server-cookbooks-user-key.id}"
+      "aws_secret_access_key" = "${aws_iam_access_key.chef-server-cookbooks-user-key.secret}"
+      "s3_bucket" = "${aws_s3_bucket.chef-server-cookbooks.id}"
+      "rds_endpoint" = "${aws_db_instance.chef-server-db.address}"
+      "rds_username" = "${var.rds_username}"
+      "rds_password" = "${var.rds_password}"
+    }
+}
+
 resource "aws_launch_configuration" "chef-cluster-frontend-launchcfg" {
     image_id = "${lookup(var.amis, var.region)}"
     instance_type = "${var.instance_size}"
     security_groups = [ "${aws_security_group.chef-server-sg.id}" ]
     key_name = "${lookup(var.keys, var.region)}"
+    user_data = "${template_file.install-chef.rendered}"
     lifecycle {
       create_before_destroy = true
     }
@@ -293,4 +306,9 @@ resource "aws_autoscaling_group" "chef-cluster-asg" {
   lifecycle {
     create_before_destroy = true
   }
+}
+
+# Spit out where we can access the Chef server
+output "elb" {
+    value = "${aws_elb.chef-cluster-elb.dns_name}"
 }

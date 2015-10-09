@@ -25,3 +25,11 @@ variable "elb_sslcert" {
 variable "instance_size" {
     default = "t2.medium"
 }
+
+variable "rds_username" {
+    default = "chef"
+}
+
+variable "rds_password" {
+    default = "chefchefchef"
+}
