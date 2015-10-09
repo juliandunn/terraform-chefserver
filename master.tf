@@ -5,7 +5,7 @@ provider "aws" {
 # VPC and basic networking
 resource "aws_vpc" "chef-cluster" {
     cidr_block = "192.168.8.0/24"
-
+    enable_dns_hostnames = true
     tags {
         Name = "chef-cluster"
     }
