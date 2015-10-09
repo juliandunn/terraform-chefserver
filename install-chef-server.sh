@@ -61,7 +61,7 @@ PrivateChef.register_extension("aws", {
                                })
 EOF
 
-cat <<EOF > /var/opt/opscode/chef-ha-aws/chef-ha-aws-extension.rb
+cat <<EOF > /var/opt/opscode/plugins/chef-ha-aws.rb
 plugin 'chef-ha-aws' do
   enabled_by_default false
   cookbook_path '/opt/opscode/embedded/cookbooks'
