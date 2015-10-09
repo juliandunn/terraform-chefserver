@@ -270,7 +270,7 @@ EOF
 
 # Autoscaling groups and launch configs
 resource "template_file" "install-chef" {
-    filename = "install_chef_server.sh"
+    filename = "install-chef-server.sh"
     vars {
       "aws_access_key" = "${aws_iam_access_key.chef-server-cookbooks-user-key.id}"
       "aws_secret_access_key" = "${aws_iam_access_key.chef-server-cookbooks-user-key.secret}"
