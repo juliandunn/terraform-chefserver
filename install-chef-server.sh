@@ -10,8 +10,8 @@ aws_access_key_id "${aws_access_key}"
 aws_secret_access_key "${aws_secret_access_key}"
 s3_bucket "${s3_bucket}"
 rds_endpoint "${rds_endpoint}"
-rds_username "#{rds_username}"
-rds_password "#{rds_password}"
+rds_username "${rds_username}"
+rds_password "${rds_password}"
 
 # TODO move into topology definition
 opscode_erchef['search_provider'] = 'solr'
