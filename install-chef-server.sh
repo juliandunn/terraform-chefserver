@@ -17,6 +17,7 @@ rds_password "${rds_password}"
 opscode_erchef['search_provider'] = 'solr'
 opscode_erchef['search_queue_mode'] = 'batch'
 opscode_expander['enable'] = false
+rabbitmq['enable'] = false
 
 EOF
 
