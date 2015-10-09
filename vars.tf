@@ -23,7 +23,7 @@ variable "elb_sslcert" {
 }
 
 variable "instance_size" {
-    default = "t2.medium"
+    default = "t2.large"
 }
 
 variable "rds_username" {
