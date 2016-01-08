@@ -14,9 +14,11 @@ rds_username "${rds_username}"
 rds_password "${rds_password}"
 
 # TODO move into topology definition
-opscode_erchef['search_provider'] = 'solr'
+opscode_erchef['search_provider'] = 'elasticsearch'
 opscode_erchef['search_queue_mode'] = 'batch'
 opscode_expander['enable'] = false
+opscode_solr4['external'] = true
+opscode_solr4['external_url] = "${elasticsearch_url}"
 rabbitmq['enable'] = false
 
 EOF
